@@ -1,3 +1,6 @@
+unsloth_compiled_cache/
+tmp-test-runs/
+
 # Created by https://www.toptal.com/developers/gitignore/api/macos,linux,windows,archives,images,video,vim
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,linux,windows,archives,images,video,vim
 
