@@ -16,7 +16,7 @@ print = rich_print
 #      or did they just add outline and it happens to not cause trouble? and be helpful without any SFT?
 #      or is there a newer model :) and train dataset :)
 #
-# FYI to test this
+# *** to test this
 #   export ZED_PREDICT_EDITS_URL=http://build21:PORT/predict_edits # or w/e route I use below
 #   zed  # zed will use the URL for request (already confirmed this works)
 
@@ -26,22 +26,11 @@ print = rich_print
 #  FYI this is mentioned in model card... IIAC this is how they're serving the actual zeta model (or at the time)
 #    https://huggingface.co/zed-industries/zeta
 #    do some speed tests w/ and w/o spec dec
-#
-#  TODO review below and touch up to work with the released HF zeta model
-
-# FYI from zeta cask
-# const CURSOR_MARKER: &'static str = "<|user_cursor_is_here|>";
-# const START_OF_FILE_MARKER: &'static str = "<|start_of_file|>";
-# const EDITABLE_REGION_START_MARKER: &'static str = "<|editable_region_start|>";
-# const EDITABLE_REGION_END_MARKER: &'static str = "<|editable_region_end|>";
-# const BUFFER_CHANGE_GROUPING_INTERVAL: Duration = Duration::from_secs(1);
-# const ZED_PREDICT_DATA_COLLECTION_CHOICE: &str = "zed_predict_data_collection_choice";
 
 app = Flask(__name__)
 
-# PREDICTION_API_URL = os.getenv("PREDICTION_API_URL")
-VLLM_COMPLETIONS_V1_URL = "http://localhost:1234/v1/completions"
-
+# OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://localhost:8000/v1/completions"
+OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://localhost:1234/v1/completions"
 
 @app.route('/predict_edits', methods=['POST'])
 def predict_edits():
@@ -89,8 +78,11 @@ def predict_edits():
         timeout_sec = 30
         async with httpx.AsyncClient(timeout=timeout_sec) as client:
             with Timer("inner"):
-                vllm_request_body = {
-                    "model": "zeta", # LMStudio defaults to zeta
+                request_body = {
+
+                    "model": "zeta", # LMStudio defaults to zeta 
+                    # * for VLLM clear model or set matching value with `--served-model-name zeta`
+
                     "prompt": prompt,
                     "max_tokens": 2048,  # PR 23997 used 2048 # TODO what max? # can I get it to just stop on EOT?
                     # TODO should I set EOT to be the end of the template token(s)?
@@ -101,16 +93,16 @@ def predict_edits():
                     # "stop": null # TODO what value?
                     # "rewrite_speculation": True # TODO?
                 }
-                print("\n\n[bold red]## request body => vllm:")
-                print_json(data=vllm_request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
+                print("\n\n[bold red]## request body => zeta /v1/completions:")
+                print_json(data=request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
 
-                response = await client.post(VLLM_COMPLETIONS_V1_URL, json=vllm_request_body)
-                vllm_response_body = response.json()
-                print("\n\n[bold red]## vllm => response body:")
-                print_json(data=vllm_response_body)
+                response = await client.post(OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body)
+                response_body = response.json()
+                print("\n\n[bold red]## zeta /v1/completions => response body:")
+                print_json(data=response_body)
                 response.raise_for_status()
-                choice_text = vllm_response_body.get("choices", [{}])[0].get("text", "")
-                response_id = vllm_response_body["id"].replace("cmpl-", "")  # drop cmpl- prefix, must be valid UUID for zed to parse (not sure what it needs it for, maybe logging?)
+                choice_text = response_body.get("choices", [{}])[0].get("text", "")
+                response_id = response_body["id"].replace("cmpl-", "")  # drop cmpl- prefix, must be valid UUID for zed to parse (not sure what it needs it for, maybe logging?)
 
                 return {
                     "output_excerpt": choice_text,
