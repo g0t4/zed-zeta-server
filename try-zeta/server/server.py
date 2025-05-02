@@ -40,7 +40,7 @@ print = rich_print
 app = Flask(__name__)
 
 # PREDICTION_API_URL = os.getenv("PREDICTION_API_URL")
-VLLM_COMPLETIONS_V1_URL = "http://localhost:8000/v1/completions"
+VLLM_COMPLETIONS_V1_URL = "http://localhost:1234/v1/completions"
 
 
 @app.route('/predict_edits', methods=['POST'])
@@ -90,7 +90,7 @@ def predict_edits():
         async with httpx.AsyncClient(timeout=timeout_sec) as client:
             with Timer("inner"):
                 vllm_request_body = {
-                    # "model": "zeta", -- do not need with vllm backend
+                    "model": "zeta", # LMStudio defaults to zeta
                     "prompt": prompt,
                     "max_tokens": 2048,  # PR 23997 used 2048 # TODO what max? # can I get it to just stop on EOT?
                     # TODO should I set EOT to be the end of the template token(s)?
