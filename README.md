@@ -1,5 +1,7 @@
 ## Running server
 
+FYI this is just for fun, it is not a production-ready server. Great for learning!
+
 ```bash
 # create venv
 python -m venv venv
