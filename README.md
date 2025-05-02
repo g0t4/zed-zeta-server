@@ -17,6 +17,17 @@ ipython3 server/server.py
 
 ```
 
+## Running zed w/ server
+
+```bash
+export ZED_PREDICT_EDITS_URL=http://localhost:1234/predict_edits
+zed
+```
+
+## zeta.nvim experimental plugin
+
+I'm working on a POC for using zeta model predictions in neovim.
+Here is the repo: https://github.com/g0t4/zeta.nvim
 
 ## Predictions Backend Architecture
 

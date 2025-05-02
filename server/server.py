@@ -17,7 +17,7 @@ print = rich_print
 #      or is there a newer model :) and train dataset :)
 #
 # *** to test this
-#   export ZED_PREDICT_EDITS_URL=http://build21:PORT/predict_edits # or w/e route I use below
+#   export ZED_PREDICT_EDITS_URL=http://localhost:1234/predict_edits # or w/e route I use below
 #   zed  # zed will use the URL for request (already confirmed this works)
 
 #
