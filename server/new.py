@@ -176,12 +176,19 @@ async def predict_edits(request: Request, response: Response):
         except Exception as e:
             return {"error": str(e)}
 
-    # FYI run ./server/test-server.sh
-    # Ctrl-C half a second later (let vllm see the request first)
-    # then I get this:
-    # INFO 05-06 16:27:59 [async_llm.py:252] Added request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0.
-    # INFO 05-06 16:27:59 [async_llm.py:411] Aborted request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0.
-    # INFO 05-06 16:27:59 [async_llm.py:318] Request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0 aborted.
+    # to simulate and test predictions client disconnect:
+    #   run ./server/test-server.sh
+    #   Ctrl-C half a second later (let vllm see the request first)
+    #   then I get this:
+    #     INFO 05-06 16:27:59 [async_llm.py:252] Added request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0.
+    #     INFO 05-06 16:27:59 [async_llm.py:411] Aborted request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0.
+    #     INFO 05-06 16:27:59 [async_llm.py:318] Request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0 aborted.
+    # Or, better yet run this with neovim by using the predictions plugin
+    #   hit i to go into insert mode
+    #   hit escape to bail 
+    #   you will see aborted in vllm logs! (and in predict_edits logs)
+
+
 
 
 
