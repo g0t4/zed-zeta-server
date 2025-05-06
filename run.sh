@@ -7,4 +7,4 @@ if [ -z "$VIRTUAL_ENV" ]; then
     exit 1
 fi
 
-ipython3 server/server.py
+fastapi dev --port 9000 server/new.py

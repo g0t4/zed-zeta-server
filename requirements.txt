@@ -2,3 +2,5 @@ flask
 httpx
 rich
 ipykernel # for ipython3 command
+fastapi[standard]
+uvicorn[standard]
