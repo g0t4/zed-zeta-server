@@ -75,8 +75,8 @@ def predict_edits():
     # zeta client request body builder:
     #   https://github.com/zed-industries/zed/blob/17ecf94f6f/crates/zeta/src/zeta.rs#L449-L466
     async def generate_prediction():
-        timeout_sec = 30
-        async with httpx.AsyncClient(timeout=timeout_sec) as client:
+        timeout_seconds = 30
+        async with httpx.AsyncClient(timeout=timeout_seconds) as client:
             with Timer("inner"):
                 request_body = {
 
