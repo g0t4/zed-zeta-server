@@ -156,15 +156,25 @@ async def predict_edits(request: Request, response: Response):
                     #   not sure this is then used anywhere
                 }
 
-    try:
-        with Timer("async-outer"):
-            zed_prediction_response_body = await generate_prediction()
+    with Timer("async-outer"):
+        task = asyncio.create_task(generate_prediction())
+
+        while not task.done():
+            # if/when the client disconnects, we cancel the upstream request
+            # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
+            if await request.is_disconnected():
+                print("Client disconnected")
+                task.cancel()
+                break
+        try:
+            zed_prediction_response_body = await task
             print("\n\n[bold green]## Zed response body:")
             print_json(data=zed_prediction_response_body)
             return zed_prediction_response_body
-
-    except Exception as e:
-        return {"error": str(e)}
+        except asyncio.CancelledError:
+            return "Request cancelled"
+        except Exception as e:
+            return {"error": str(e)}
 
 
 
@@ -172,4 +182,3 @@ async def predict_edits(request: Request, response: Response):
 # if __name__ == "__main__":
 #     import uvicorn
 #     uvicorn.run("app", host="127.0.0.1", port=9000, reload=True)
-
