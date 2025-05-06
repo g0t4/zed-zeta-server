@@ -14,8 +14,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 uv pip install -r requirements.txt
 
-# run server
-ipython3 server/server.py
+# run server (now uses fastapi)
+./run.sh
 
 ```
 
