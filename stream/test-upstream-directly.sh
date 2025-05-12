@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# SETUP TO TEST BACKEND disconnects (i.e. see message in its logs)
+
 http ollama:11434/v1/completions <<'EOF'
 {
   "model": "qwen2.5-coder:1.5b",
