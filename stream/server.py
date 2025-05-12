@@ -49,7 +49,7 @@ def parse_delta(line: str) -> tuple[str, bool, str|None]:
     #  {"id":"cmpl-fd048c7865e94616a2ed2b6564c1232b","object":"text_completion","created":1747078116,"model":"zed-industries/zeta","choices":[{"index":0,"text":"`\n","logprobs":null,"finish_reason":null,"stop_reason":null}],"usage":null}
     #  {"id":"cmpl-fd048c7865e94616a2ed2b6564c1232b","object":"text_completion","created":1747078116,"model":"zed-industries/zeta","choices":[{"index":0,"text":"","logprobs":null,"finish_reason":"stop","stop_reason":null}],"usage":null}
 
-class StreamRequestModel(BaseModel):
+class StreamingPredictionRequest(BaseModel):
     input_events: str|None
     input_excerpt: str|None
     include_finish_reason: bool = False 
@@ -62,14 +62,14 @@ class StreamRequestModel(BaseModel):
 # nonetheless, no need to parse json client side, or server side if inference integrated w/ new format
 
 @app.post("/stream_edits")
-async def stream_edits(model: StreamRequestModel): # client_request: Request
+async def stream_edits(prediction_request: StreamingPredictionRequest): # client_request: Request
     
     if verbose_logging:
         print("\n\n[bold red]## Zed request body:")
-        print(model)
+        print(prediction_request)
 
     prompt_template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
-    prompt = prompt_template.format(model.input_events, model.input_excerpt)
+    prompt = prompt_template.format(prediction_request.input_events, prediction_request.input_excerpt)
 
     if verbose_logging:
         print("\n\n[bold red]## Prompt:")
@@ -122,7 +122,7 @@ async def stream_edits(model: StreamRequestModel): # client_request: Request
                         all_deltas.append(delta)
 
                     if is_done:
-                        if model.include_finish_reason:
+                        if prediction_request.include_finish_reason:
                             yield json.dumps({"finish_reason": finish_reason })
                         if verbose_logging:
                             print(f"done: {finish_reason}")
