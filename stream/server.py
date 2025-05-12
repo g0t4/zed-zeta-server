@@ -12,12 +12,16 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:11434/v1/completions"
 
 app = FastAPI()
 
-def parse_ss_events(chunk_of_events: str) -> tuple[list[dict], bool]:
+def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[list[dict], bool, str|None]:
     print("[yellow][bold]chunk", chunk_of_events)
+    # simplifications:
+    # - completions endpoint only returns "data:" field
+    # - with value that is either a JSON object or "[DONE]"
+    # - I only need to know if its done, or the delta text
     if chunk_of_events.strip() == "":
-        return [], False
+        return [], False, None
 
-    events = []
+    deltas = []
 
     for line in chunk_of_events.splitlines():
         if line.startswith("data: "):
@@ -25,16 +29,22 @@ def parse_ss_events(chunk_of_events: str) -> tuple[list[dict], bool]:
             try:
                 event_data = event_data.strip()
                 if event_data == "[DONE]":
-                    return events, True
+                    # FYI should never get here b/c finish_reason should be found on the previous event
+                    return deltas, True, "[DONE]"
                 event = json.loads(event_data)
-                events.append(event)
+                choices = event.get("choices", [])
+                first_choice = choices[0]
+                stop_reason = first_choice.get("finish_reason")
+                if stop_reason == "stop":
+                    return deltas, True, "stop"
+                deltas.append(first_choice["text"])
             except json.JSONDecodeError:
                 pass
     # examples:
     #  {"id":"cmpl-142","object":"text_completion","created":1747075759,"choices":[{"text":"```","index":0,"finish_reason":null}],"model":"qwen2.5-coder:1.5b","system_fingerprint":"fp_ollama"}
     #  {"id":"cmpl-142","object":"text_completion","created":1747075759,"choices":[{"text":"","index":0,"finish_reason":"stop"}],"model":"qwen2.5-coder:1.5b","system_fingerprint":"fp_ollama"}
 
-    return events, False
+    return deltas, False, None
 
 @app.post("/stream_edits")
 async def stream_edits(request: Request, response: Response):
@@ -76,10 +86,10 @@ async def stream_edits(request: Request, response: Response):
                 #   aiter_text() => SSEs are entire chunk including 2 newlines:  with data: {}\n\n
                 # async for chunk in response.aiter_lines():
                 async for chunk_of_events in response.aiter_text():
-                    events, is_done = parse_ss_events(chunk_of_events)
-                    print(events)
+                    deltas, is_done, finish_reason = parse_deltas_from_chunk(chunk_of_events)
+                    print(f"[blue]deltas: {deltas}")
                     if is_done:
-                        print("done")
+                        print(f"done: {finish_reason}")
                         break
 
             # TODO print final, full response for debugging?
