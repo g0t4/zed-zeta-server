@@ -7,4 +7,4 @@ if [ -z "$VIRTUAL_ENV" ]; then
     exit 1
 fi
 
-fastapi dev --port 7000 stream/server.py
+fastapi dev --port 7100 stream/server.py
