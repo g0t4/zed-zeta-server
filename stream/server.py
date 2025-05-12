@@ -45,19 +45,23 @@ async def stream_edits(request: Request, response: Response):
             }
             print("\n\n[bold red]## request body => zeta /v1/completions:")
             print_json(data=request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
+            async with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as response:
+                # async for chunk in response.aiter_lines():
+                async for chunk in response.aiter_text():
+                    print("[yellow]chunk", chunk)
 
-            response = await client.post(OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body)
-            response_body = response.json()
-            print("\n\n[bold red]## zeta /v1/completions => response body:")
-            print_json(data=response_body)
-            response.raise_for_status()
-            choice_text = response_body.get("choices", [{}])[0].get("text", "")
-            response_id = response_body["id"].replace("cmpl-", "")
+
+            # # response = await client.post(OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body)
+            # response_body = response.json()
+            # print("\n\n[bold red]## zeta /v1/completions => response body:")
+            # print_json(data=response_body)
+            # response.raise_for_status()
+            # choice_text = response_body.get("choices", [{}])[0].get("text", "")
+            # response_id = response_body["id"].replace("cmpl-", "")
 
             return {
-                "output_excerpt": choice_text,
-
-                "request_id": response_id,  
+                "output_excerpt": "TODO", # choice_text
+                "request_id": "TODO", # response_id,  
             }
 
     task = asyncio.create_task(request_vllm_completion_streaming())
