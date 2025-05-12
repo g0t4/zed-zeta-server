@@ -12,6 +12,8 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions" # vllm
 
 app = FastAPI()
 
+verbose_logging = True
+
 def parse_delta(line: str) -> tuple[str, bool, str|None]:
     # print("[yellow][bold]chunk", line)
     # simplifications:
@@ -65,6 +67,7 @@ async def stream_edits(client_request: Request):
 
     async def request_vllm_completion_streaming():
         timeout_seconds = 30
+        all_deltas = []
         async with httpx.AsyncClient(timeout=timeout_seconds) as client:
             request_body = {
 
@@ -102,10 +105,16 @@ async def stream_edits(client_request: Request):
                     
                     yield delta
 
+                    if verbose_logging:
+                        all_deltas.append(delta)
+
                     if is_done:
                         print(f"done: {finish_reason}")
                         break
 
+        if verbose_logging:
+            print("\n\n[bold green]## All deltas:")
+            print("".join(all_deltas))
 
             # TODO print final, full response for debugging?
 
