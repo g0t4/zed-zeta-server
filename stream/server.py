@@ -5,8 +5,10 @@ from rich import print as rich_print, print_json
 
 print = rich_print
 
-OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"
+# OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"
 # OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://localhost:1234/v1/completions"
+OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:11434/v1/completions"
+
 app = FastAPI()
 
 @app.post("/stream_edits")
