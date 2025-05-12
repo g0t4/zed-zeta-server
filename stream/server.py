@@ -78,20 +78,16 @@ async def stream_edits(request: Request, response: Response):
                         print("done")
                         break
 
-
-
-            # # response = await client.post(OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body)
-            # response_body = response.json()
+            # TODO print final, full response for debugging?
             # print("\n\n[bold red]## zeta /v1/completions => response body:")
             # print_json(data=response_body)
             # response.raise_for_status()
             # choice_text = response_body.get("choices", [{}])[0].get("text", "")
             # response_id = response_body["id"].replace("cmpl-", "")
-
-            return {
-                "output_excerpt": "TODO", # choice_text
-                "request_id": "TODO", # response_id,  
-            }
+            # return {
+            #     "output_excerpt": "TODO", # choice_text
+            #     "request_id": "TODO", # response_id,  
+            # }
 
     task = asyncio.create_task(request_vllm_completion_streaming())
 
@@ -99,16 +95,17 @@ async def stream_edits(request: Request, response: Response):
         # if/when the client disconnects, we cancel the upstream request
         # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
         if await request.is_disconnected():
-            print("Client disconnected")
+            print("Client of /stream_edits disconnected")
             task.cancel()
             break
     try:
-        zed_prediction_response_body = await task
-        print("\n\n[bold green]## Zed response body:")
-        print_json(data=zed_prediction_response_body)
-        return zed_prediction_response_body
+        # zed_prediction_response_body = await task
+        # print("\n\n[bold green]## Zed response body:")
+        # print_json(data=zed_prediction_response_body)
+        # return zed_prediction_response_body
+        return await task
     except asyncio.CancelledError:
-        return "Request cancelled"
+        return "Request to Zeta cancelled"
     except Exception as e:
         return {"error": str(e)}
 
