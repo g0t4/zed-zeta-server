@@ -6,3 +6,5 @@ uvicorn[standard]
 vllm # for /consolidated_edits
 
 yapf # my formatter
+
+rope # for refactoring in nvim
