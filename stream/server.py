@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import StreamingResponse
 import asyncio
 import httpx
 import json
@@ -47,7 +48,7 @@ def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[str, bool, str|None]:
     return deltas, False, None
 
 @app.post("/stream_edits")
-async def stream_edits(request: Request, response: Response):
+async def stream_edits(request: Request):
     
     zed_request = await request.json()
     print("\n\n[bold red]## Zed request body:")
@@ -88,9 +89,12 @@ async def stream_edits(request: Request, response: Response):
                 async for chunk_of_events in response.aiter_text():
                     deltas, is_done, finish_reason = parse_deltas_from_chunk(chunk_of_events)
                     print(f"[blue]deltas: {deltas}")
+                    
                     if is_done:
                         print(f"done: {finish_reason}")
                         break
+
+                    yield deltas
 
             # TODO print final, full response for debugging?
             # print("\n\n[bold red]## zeta /v1/completions => response body:")
@@ -103,23 +107,25 @@ async def stream_edits(request: Request, response: Response):
             #     "request_id": "TODO", # response_id,  
             # }
 
-    task = asyncio.create_task(request_vllm_completion_streaming())
+    return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
 
-    while not task.done():
-        # if/when the client disconnects, we cancel the upstream request
-        # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
-        if await request.is_disconnected():
-            print("Client of /stream_edits disconnected")
-            task.cancel()
-            break
-    try:
-        # zed_prediction_response_body = await task
-        # print("\n\n[bold green]## Zed response body:")
-        # print_json(data=zed_prediction_response_body)
-        # return zed_prediction_response_body
-        return await task
-    except asyncio.CancelledError:
-        return "Request to Zeta cancelled"
-    except Exception as e:
-        return {"error": str(e)}
-
+    # task = asyncio.create_task(request_vllm_completion_streaming())
+    #
+    # while not task.done():
+    #     # if/when the client disconnects, we cancel the upstream request
+    #     # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
+    #     if await request.is_disconnected():
+    #         print("Client of /stream_edits disconnected")
+    #         task.cancel()
+    #         break
+    # try:
+    #     # zed_prediction_response_body = await task
+    #     # print("\n\n[bold green]## Zed response body:")
+    #     # print_json(data=zed_prediction_response_body)
+    #     # return zed_prediction_response_body
+    #     return await task
+    # except asyncio.CancelledError:
+    #     return "Request to Zeta cancelled"
+    # except Exception as e:
+    #     return {"error": str(e)}
+    #
