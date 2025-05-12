@@ -1,4 +1,3 @@
-flask
 httpx
 rich
 ipykernel # for ipython3 command
