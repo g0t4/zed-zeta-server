@@ -91,7 +91,7 @@ async def stream_edits(client_request: Request):
                 #   aiter_lines() => SSEs split into data: line and empty line (separate chunks)
                 #   aiter_text() => SSEs are entire chunk including 2 newlines:  with data: {}\n\n
                 # async for chunk in response.aiter_lines():
-                async for chunk_of_events in vllm_response.aiter_text():
+                async for chunk_of_events in vllm_response.aiter_lines():
 
                     # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
                     # don't need this as , but could check if I needed to do something special on disconnect:
