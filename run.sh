@@ -7,4 +7,4 @@ if [ -z "$VIRTUAL_ENV" ]; then
     exit 1
 fi
 
-fastapi dev --port 9000 server/new.py
+fastapi dev --port 9000 server/sync.py
