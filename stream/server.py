@@ -51,9 +51,9 @@ def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[str, bool, str|None]:
     return deltas, False, None
 
 @app.post("/stream_edits")
-async def stream_edits(request: Request):
+async def stream_edits(client_request: Request):
     
-    zed_request = await request.json()
+    zed_request = await client_request.json()
     print("\n\n[bold red]## Zed request body:")
     print_json(data=zed_request)
     input_events = zed_request.get('input_events', '')
@@ -86,16 +86,16 @@ async def stream_edits(request: Request):
             print_json(data=request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
 
             print("\n\n[bold red]## response zeta => deltas:") 
-            async with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as response:
+            async with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as vllm_response:
                 # FYI for completions:
                 #   aiter_lines() => SSEs split into data: line and empty line (separate chunks)
                 #   aiter_text() => SSEs are entire chunk including 2 newlines:  with data: {}\n\n
                 # async for chunk in response.aiter_lines():
-                async for chunk_of_events in response.aiter_text():
+                async for chunk_of_events in vllm_response.aiter_text():
 
                     # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
                     # don't need this as , but could check if I needed to do something special on disconnect:
-                    # if await request.is_disconnected():
+                    # if await client_request.is_disconnected():
                     #     print("Client of /stream_edits Disconnected")
                     #     break
                 
