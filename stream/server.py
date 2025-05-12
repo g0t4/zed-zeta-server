@@ -29,6 +29,11 @@ async def predict_edits(request: Request, response: Response):
         async with httpx.AsyncClient(timeout=timeout_seconds) as client:
             request_body = {
 
+                # FYI just need simple model to test with, and use ollama for reduced startup time in testing too
+                # TODO later swap back into vllm backend for real deal
+                #  ollama server
+                "model": "qwen2.5-coder:1.5b",
+
                 "prompt": prompt,
                 "max_tokens": 2048,
 
