@@ -12,10 +12,14 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:11434/v1/completions"
 
 app = FastAPI()
 
-def parse_ss_events(data: str) -> tuple[list[dict], bool]:
+def parse_ss_events(chunk_of_events: str) -> tuple[list[dict], bool]:
+    print("[yellow][bold]chunk", chunk_of_events)
+    if chunk_of_events.strip() == "":
+        return [], False
+
     events = []
 
-    for line in data.splitlines():
+    for line in chunk_of_events.splitlines():
         if line.startswith("data: "):
             event_data = line[6:]
             try:
@@ -69,9 +73,6 @@ async def stream_edits(request: Request, response: Response):
                 #   aiter_text() => SSEs are entire chunk including 2 newlines:  with data: {}\n\n
                 # async for chunk in response.aiter_lines():
                 async for chunk_of_events in response.aiter_text():
-                    print("[yellow][bold]chunk", chunk_of_events)
-                    if chunk_of_events.strip() == "":
-                        continue
                     events, is_done = parse_ss_events(chunk_of_events)
                     print(events)
                     if is_done:
