@@ -33,6 +33,8 @@ async def predict_edits(request: Request, response: Response):
                 "max_tokens": 2048,
 
                 "temperature": 0.0,  
+
+                "stream": True,
             }
             print("\n\n[bold red]## request body => zeta /v1/completions:")
             print_json(data=request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
