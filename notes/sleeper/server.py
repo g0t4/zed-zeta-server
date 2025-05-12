@@ -11,25 +11,25 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"
 app = FastAPI()
 
 @app.get("/test_sleeper_proxy")
-async def test_proxy(request: Request):
+async def test_proxy(client_request: Request):
     # THIS IS A SIMULATED PROXY (like /predict_edits), curl connects here, then this connects to upstream
     async def make_request():
         async with httpx.AsyncClient() as client:
             return await client.get("http://localhost:9000/test_sleeper", timeout=None)  # disable timeout for demo
 
-    task = asyncio.create_task(make_request())
-    while not task.done():
+    upstream_request_task = asyncio.create_task(make_request())
+    while not upstream_request_task.done():
         # if/when the client disconnects, we cancel the upstream request
         # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
-        if await request.is_disconnected():
-            print("Client disconnected")
-            task.cancel()
+        if await client_request.is_disconnected():
+            print("Client of /test_sleeper_proxy disconnected")
+            upstream_request_task.cancel()
             break
     try:
-        response = await task
+        response = await upstream_request_task
         return Response(response.text, media_type="text/plain")
     except asyncio.CancelledError:
-        print("Request cancelled")
+        print("Request to /test_sleeper cancelled")
 
 @app.get("/test_sleeper")
 async def test_stream(request: Request):
