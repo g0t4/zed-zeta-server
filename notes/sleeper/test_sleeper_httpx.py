@@ -1,11 +1,11 @@
 import asyncio
 import httpx
 
-# this was just to test httpx cancelation logic before merging it into /test_sleeper_proxy
+# this was just to test httpx cancelation logic before merging it into /test_proxy
 
 async def make_request():
     async with httpx.AsyncClient() as client:
-        return await client.get("http://localhost:9000/test_sleeper", timeout=None)  # disable timeout for demo
+        return await client.get("http://localhost:9000/upstream", timeout=None)  # disable timeout for demo
 
 async def main():
     task = asyncio.create_task(make_request())
