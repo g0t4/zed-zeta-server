@@ -8,8 +8,6 @@ print = rich_print
 
 app = FastAPI()
 
-# client => /proxy => /upstream
-
 @app.get("/proxy")
 async def proxy(client_request: Request):
     # THIS IS A SIMULATED PROXY (like /predict_edits), curl connects here, then this connects to upstream
