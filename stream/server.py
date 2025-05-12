@@ -56,10 +56,10 @@ class StreamRequestModel(BaseModel):
     include_finish_reason: bool = False 
 
 @app.post("/stream_edits")
-async def stream_edits(client_request: Request, model: StreamRequestModel):
+async def stream_edits(_client_request: Request, model: StreamRequestModel):
     
     print("\n\n[bold red]## Zed request body:")
-    # print_json(data=model)
+    print(model)
 
     prompt_template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
     prompt = prompt_template.format(model.input_events, model.input_excerpt)
@@ -98,7 +98,7 @@ async def stream_edits(client_request: Request, model: StreamRequestModel):
 
                     # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
                     # don't need this as , but could check if I needed to do something special on disconnect:
-                    # if await client_request.is_disconnected():
+                    # if await _client_request.is_disconnected():
                     #     print("Client of /stream_edits Disconnected")
                     #     break
                 
