@@ -13,7 +13,7 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions" # vllm
 app = FastAPI()
 
 def parse_delta(line: str) -> tuple[str, bool, str|None]:
-    print("[yellow][bold]chunk", line)
+    # print("[yellow][bold]chunk", line)
     # simplifications:
     # - completions endpoint only returns "data:" field
     # - with value that is either a JSON object or "[DONE]"
@@ -22,7 +22,7 @@ def parse_delta(line: str) -> tuple[str, bool, str|None]:
     if not line or not line.startswith("data: "):
         return "", False, None
 
-    print("[green]line",line)
+    # print("[green]line",line)
     event_data = line[6:]
     try:
         event_data = event_data.strip()
@@ -98,7 +98,7 @@ async def stream_edits(client_request: Request):
                     #     break
                 
                     deltas, is_done, finish_reason = parse_delta(chunk_of_events)
-                    print(f"[blue]deltas: {deltas}")
+                    # print(f"[blue]deltas: {deltas}")
                     
                     if is_done:
                         print(f"done: {finish_reason}")
