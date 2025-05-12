@@ -1,15 +1,14 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
-import asyncio
 import httpx
 import json
 from rich import print as rich_print, print_json
 
 print = rich_print
 
-# OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:7100/v1/completions"
+OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions" # vllm
 # OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://localhost:1234/v1/completions"
-OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:11434/v1/completions"
+# OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:11434/v1/completions"
 
 app = FastAPI()
 
@@ -70,7 +69,7 @@ async def stream_edits(request: Request):
                 # FYI just need simple model to test with, and use ollama for reduced startup time in testing too
                 # TODO later swap back into vllm backend for real deal
                 #  ollama server
-                "model": "qwen2.5-coder:1.5b",
+                # "model": "qwen2.5-coder:1.5b",
 
                 "prompt": prompt,
                 "max_tokens": 2048,
@@ -102,11 +101,7 @@ async def stream_edits(request: Request):
 
     return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
 
-    # task = asyncio.create_task(request_vllm_completion_streaming())
-    #
-    # TODO review client disconnect, it's working fine here from /stream_edits... but not sure backend is stopping
-    #   TODO test with vllm cuz it gives a nice message when this happens, I cannot recall if ollama shows disconnect or not
-    # while not task.done():
+    # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
     #     # if/when the client disconnects, we cancel the upstream request
     #     # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
     #     if await request.is_disconnected():
