@@ -23,14 +23,14 @@ uv pip install -r requirements.txt
 
 - [setup-uv-venv.sh](setup-uv-venv.sh) - run this to setup with `uv` command
    - does same things as above with `pip install`
-- [server/new.py](server/new.py) - new FastAPI server w/ disconnect support (client disconnect propagates instantly to vllm (or other completions backend))
+- [server/sync.py](server/sync.py) - new, sync FastAPI server w/ disconnect support (client disconnect propagates instantly to vllm (or other completions backend))
+  - has a few test endpoints for learning/testing client disconnect and propagating the disconnect, can be used with:
+    - [server/cancel-httpx.py](server/cancel-httpx.py) - shows how a standalone client can disconnect when using httpx client 
+      - this is not propagating to an upstream
+      - this is just client to server and what disconnect looks like on both sides
 - [server/test-server.sh](server/test-server.sh) - test a request thru this FastAPI server back to vllm
   - ctrl-c to test client disconnect, shows abort in vllm (and other backends if they suppport it)
   - wait for it to complete and you'll see output_excerpt!
-- [server/sync.py](server/sync.py) has a few test endpoints for learning/testing client disconnect and propagating the disconnect
-  - [server/cancel-httpx.py](server/cancel-httpx.py) - shows how a standalone client can disconnect when using httpx client 
-    - this is not propagating to an upstream
-    - this is just client to server and what disconnect looks like on both sides
 
 ## Running zed w/ server
 
