@@ -92,6 +92,13 @@ async def stream_edits(request: Request):
                 #   aiter_text() => SSEs are entire chunk including 2 newlines:  with data: {}\n\n
                 # async for chunk in response.aiter_lines():
                 async for chunk_of_events in response.aiter_text():
+
+                    # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
+                    # don't need this as , but could check if I needed to do something special on disconnect:
+                    # if await request.is_disconnected():
+                    #     print("Client of /stream_edits Disconnected")
+                    #     break
+                
                     deltas, is_done, finish_reason = parse_deltas_from_chunk(chunk_of_events)
                     print(f"[blue]deltas: {deltas}")
                     
@@ -104,22 +111,3 @@ async def stream_edits(request: Request):
             # TODO print final, full response for debugging?
 
     return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
-
-    # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
-    #     # if/when the client disconnects, we cancel the upstream request
-    #     # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
-    #     if await request.is_disconnected():
-    #         print("Client of /stream_edits disconnected")
-    #         task.cancel()
-    #         break
-    # try:
-    #     # zed_prediction_response_body = await task
-    #     # print("\n\n[bold green]## Zed response body:")
-    #     # print_json(data=zed_prediction_response_body)
-    #     # return zed_prediction_response_body
-    #     return await task
-    # except asyncio.CancelledError:
-    #     return "Request to Zeta cancelled"
-    # except Exception as e:
-    #     return {"error": str(e)}
-    #
