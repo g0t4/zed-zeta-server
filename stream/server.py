@@ -51,7 +51,7 @@ def parse_delta(line: str) -> tuple[str, bool, str|None]:
 
 
 @app.post("/stream_edits")
-async def stream_edits(client_request: Request):
+async def stream_edits(client_request: Request, include_finish_reason = False):
     
     zed_request = await client_request.json()
     print("\n\n[bold red]## Zed request body:")
@@ -109,6 +109,8 @@ async def stream_edits(client_request: Request):
                         all_deltas.append(delta)
 
                     if is_done:
+                        if include_finish_reason:
+                            yield json.dumps({"finish_reason": finish_reason })
                         print(f"done: {finish_reason}")
                         break
 

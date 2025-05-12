@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-http localhost:7100/stream_edits <<'EOF'
+http --pretty colors localhost:7100/stream_edits?include_finish_reason=1 <<'EOF'
 {
     "outline": "```lua/ask-openai/prediction/tests/calc/calc.lua\nfunction M.add\n```\n",
     "input_events": "User edited \"lua/ask-openai/prediction/tests/calc/calc.lua\":\n```diff\n@@ -7,4 +7,5 @@\n \n \n \n+\n return M\n\n```\n\nUser edited \"lua/ask-openai/prediction/tests/calc/calc.lua\":\n```diff\n@@ -8,4 +8,5 @@\n \n \n \n+\n return M\n\n```",
