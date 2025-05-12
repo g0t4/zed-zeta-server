@@ -12,7 +12,7 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions" # vllm
 
 app = FastAPI()
 
-verbose_logging = True
+verbose_logging = False
 
 def parse_delta(line: str) -> tuple[str, bool, str|None]:
     # print("[yellow][bold]chunk", line)
