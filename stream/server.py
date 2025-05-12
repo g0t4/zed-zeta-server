@@ -97,10 +97,10 @@ async def stream_edits(client_request: Request):
                     #     print("Client of /stream_edits Disconnected")
                     #     break
                 
-                    deltas, is_done, finish_reason = parse_delta(chunk_of_events)
+                    delta, is_done, finish_reason = parse_delta(chunk_of_events)
                     # print(f"[blue]deltas: {deltas}")
                     
-                    yield deltas
+                    yield delta
 
                     if is_done:
                         print(f"done: {finish_reason}")
