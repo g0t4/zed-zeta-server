@@ -100,11 +100,12 @@ async def stream_edits(client_request: Request):
                     deltas, is_done, finish_reason = parse_delta(chunk_of_events)
                     # print(f"[blue]deltas: {deltas}")
                     
+                    yield deltas
+
                     if is_done:
                         print(f"done: {finish_reason}")
                         break
 
-                    yield deltas
 
             # TODO print final, full response for debugging?
 
