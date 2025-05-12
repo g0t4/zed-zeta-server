@@ -12,16 +12,16 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:11434/v1/completions"
 
 app = FastAPI()
 
-def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[list[dict], bool, str|None]:
+def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[str, bool, str|None]:
     print("[yellow][bold]chunk", chunk_of_events)
     # simplifications:
     # - completions endpoint only returns "data:" field
     # - with value that is either a JSON object or "[DONE]"
     # - I only need to know if its done, or the delta text
     if chunk_of_events.strip() == "":
-        return [], False, None
+        return "", False, None
 
-    deltas = []
+    deltas = ""
 
     for line in chunk_of_events.splitlines():
         if line.startswith("data: "):
@@ -37,7 +37,7 @@ def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[list[dict], bool, str
                 stop_reason = first_choice.get("finish_reason")
                 if stop_reason == "stop":
                     return deltas, True, "stop"
-                deltas.append(first_choice["text"])
+                deltas += first_choice.get("text", "")
             except json.JSONDecodeError:
                 pass
     # examples:
