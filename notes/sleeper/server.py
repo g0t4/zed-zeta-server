@@ -8,10 +8,10 @@ print = rich_print
 
 app = FastAPI()
 
-# client => /test_proxy => /upstream
+# client => /proxy => /upstream
 
-@app.get("/test_proxy")
-async def test_proxy(client_request: Request):
+@app.get("/proxy")
+async def proxy(client_request: Request):
     # THIS IS A SIMULATED PROXY (like /predict_edits), curl connects here, then this connects to upstream
     async def make_request():
         async with httpx.AsyncClient() as client:
@@ -22,7 +22,7 @@ async def test_proxy(client_request: Request):
         # if/when the client disconnects, we cancel the upstream request
         # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
         if await client_request.is_disconnected():
-            print("Client of /test_proxy disconnected")
+            print("Client of /proxy disconnected")
             upstream_request_task.cancel()
             break
     try:

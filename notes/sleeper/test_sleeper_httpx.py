@@ -1,7 +1,7 @@
 import asyncio
 import httpx
 
-# this was just to test httpx cancelation logic before merging it into /test_proxy
+# this was just to test httpx cancelation logic before merging it into /proxy
 
 async def make_request():
     async with httpx.AsyncClient() as client:

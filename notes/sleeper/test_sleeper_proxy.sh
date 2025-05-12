@@ -1,4 +1,4 @@
-curl localhost:9000/test_proxy
+curl localhost:9000/proxy
 
 # run this and immediately ctrl-c
 #  server logs will show:
