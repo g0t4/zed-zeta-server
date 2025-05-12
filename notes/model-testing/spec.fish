@@ -37,7 +37,7 @@ vllm serve zed-industries/zeta \
     --enable-chunked-prefill \
     --speculative-config '{"method": "ngram", "num_speculative_tokens": 5, "prompt_lookup_max": 4, "prompt_lookup_min": 2 }' 
     # --quantization="fp8" \
-# cool! timings on ./server/test.sh:
+# cool! timings on sync/test-predict_edits.sh
 #   ~ 1.2s w/o spec dec
 #   ~ 770ms w/ spec dec
 #      yup in Zed it feels much faster too!

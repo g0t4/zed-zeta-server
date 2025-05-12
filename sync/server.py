@@ -136,7 +136,7 @@ async def predict_edits(request: Request, response: Response):
             return {"error": str(e)}
 
     # to simulate and test predictions client disconnect:
-    #   run ./server/test-server.sh
+    #   run sync/test-predict_edits.sh
     #   Ctrl-C half a second later (let vllm see the request first)
     #   then I get this:
     #     INFO 05-06 16:27:59 [async_llm.py:252] Added request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0.
