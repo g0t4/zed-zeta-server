@@ -104,6 +104,8 @@ async def stream_edits(request: Request):
 
     # task = asyncio.create_task(request_vllm_completion_streaming())
     #
+    # TODO review client disconnect, it's working fine here from /stream_edits... but not sure backend is stopping
+    #   TODO test with vllm cuz it gives a nice message when this happens, I cannot recall if ollama shows disconnect or not
     # while not task.done():
     #     # if/when the client disconnects, we cancel the upstream request
     #     # if client does not disconnect, the request eventually completes (task.done() == True) (below then returns the response to curl)
