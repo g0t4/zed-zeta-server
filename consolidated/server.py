@@ -54,15 +54,15 @@ class StreamingPredictionRequest(BaseModel):
     input_excerpt: str|None
     include_finish_reason: bool = False 
 
-# FYI! why have stream_edits:
+# FYI! why have consolidated_edits:
 # OpenAI SSE total chars: 23,911
-# same response with /stream_edits chars: 349
+# same response with /consolidated_edits chars: 349
 # 99% reduction in size
 # timing 200ms vs 400ms of user time to process, overall latency unaffected b/c of token latency
 # nonetheless, no need to parse json client side, or server side if inference integrated w/ new format
 
-@app.post("/stream_edits")
-async def stream_edits(prediction_request: StreamingPredictionRequest): # client_request: Request
+@app.post("/consolidated_edits")
+async def consolidated_edits(prediction_request: StreamingPredictionRequest): # client_request: Request
     
     if verbose_logging:
         print("\n\n[bold red]## Zed request body:")
@@ -109,8 +109,8 @@ async def stream_edits(prediction_request: StreamingPredictionRequest): # client
                     # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
                     # don't need this as , but could check if I needed to do something special on disconnect:
                     # if await client_request.is_disconnected():
-                    #     # add client_request: Request as paramter to stream_edits way above
-                    #     print("Client of /stream_edits Disconnected")
+                    #     # add client_request: Request as paramter to consolidated_edits way above
+                    #     print("Client of /consolidated_edits Disconnected")
                     #     break
                 
                     delta, is_done, finish_reason = parse_delta(chunk_of_events)
