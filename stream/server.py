@@ -54,6 +54,13 @@ class StreamRequestModel(BaseModel):
     input_excerpt: str|None
     include_finish_reason: bool = False 
 
+# FYI! why have stream_edits:
+# OpenAI SSE total chars: 23,911
+# same response with /stream_edits chars: 349
+# 99% reduction in size
+# timing 200ms vs 400ms of user time to process, overall latency unaffected b/c of token latency
+# nonetheless, no need to parse json client side, or server side if inference integrated w/ new format
+
 @app.post("/stream_edits")
 async def stream_edits(model: StreamRequestModel): # client_request: Request
     
