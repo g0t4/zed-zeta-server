@@ -30,6 +30,9 @@ def parse_ss_events(chunk_of_events: str) -> tuple[list[dict], bool]:
                 events.append(event)
             except json.JSONDecodeError:
                 pass
+    # examples:
+    #  {"id":"cmpl-142","object":"text_completion","created":1747075759,"choices":[{"text":"```","index":0,"finish_reason":null}],"model":"qwen2.5-coder:1.5b","system_fingerprint":"fp_ollama"}
+    #  {"id":"cmpl-142","object":"text_completion","created":1747075759,"choices":[{"text":"","index":0,"finish_reason":"stop"}],"model":"qwen2.5-coder:1.5b","system_fingerprint":"fp_ollama"}
 
     return events, False
 
