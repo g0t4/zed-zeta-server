@@ -9,8 +9,8 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"
 # OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://localhost:1234/v1/completions"
 app = FastAPI()
 
-@app.post("/predict_edits")
-async def predict_edits(request: Request, response: Response):
+@app.post("/stream_edits")
+async def stream_edits(request: Request, response: Response):
     
     zed_request = await request.json()
     print("\n\n[bold red]## Zed request body:")
@@ -24,7 +24,7 @@ async def predict_edits(request: Request, response: Response):
     print("\n\n[bold red]## Prompt:")
     print(prompt)
 
-    async def generate_prediction():
+    async def request_vllm_completion_streaming():
         timeout_seconds = 30
         async with httpx.AsyncClient(timeout=timeout_seconds) as client:
             request_body = {
@@ -37,7 +37,7 @@ async def predict_edits(request: Request, response: Response):
                 "prompt": prompt,
                 "max_tokens": 2048,
 
-                "temperature": 0.0,  
+                "temperature": 0.0,
 
                 "stream": True,
             }
@@ -58,7 +58,7 @@ async def predict_edits(request: Request, response: Response):
                 "request_id": response_id,  
             }
 
-    task = asyncio.create_task(generate_prediction())
+    task = asyncio.create_task(request_vllm_completion_streaming())
 
     while not task.done():
         # if/when the client disconnects, we cancel the upstream request
