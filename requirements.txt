@@ -3,3 +3,5 @@ rich
 ipykernel # for ipython3 command
 fastapi[standard]
 uvicorn[standard]
+
+yapf # my formatter
