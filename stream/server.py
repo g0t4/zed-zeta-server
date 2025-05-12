@@ -12,34 +12,33 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions" # vllm
 
 app = FastAPI()
 
-def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[str, bool, str|None]:
-    print("[yellow][bold]chunk", chunk_of_events)
+def parse_delta(line: str) -> tuple[str, bool, str|None]:
+    print("[yellow][bold]chunk", line)
     # simplifications:
     # - completions endpoint only returns "data:" field
     # - with value that is either a JSON object or "[DONE]"
+    #   - finish_reason comes before [DONE] so I can ignore that event
     # - I only need to know if its done, or the delta text
-    if chunk_of_events.strip() == "":
+    if not line or not line.startswith("data: "):
         return "", False, None
 
-    deltas = ""
+    print("[green]line",line)
+    event_data = line[6:]
+    try:
+        event_data = event_data.strip()
+        event = json.loads(event_data)
+        choices = event.get("choices", [])
+        first_choice = choices[0]
+        stop_reason = first_choice.get("finish_reason")
+        delta = first_choice.get("text", "")
+        if stop_reason == "stop":
+            return delta, True, "stop"
+        return delta, False, None
+    except json.JSONDecodeError:
+        print("[red][bold]FAILURE parsing event_data: ", event_data)
+        # TODO STOP?
+        return "", False, None
 
-    for line in chunk_of_events.splitlines():
-        if line.startswith("data: "):
-            event_data = line[6:]
-            try:
-                event_data = event_data.strip()
-                if event_data == "[DONE]":
-                    # FYI should never get here b/c finish_reason should be found on the previous event
-                    return deltas, True, "[DONE]"
-                event = json.loads(event_data)
-                choices = event.get("choices", [])
-                first_choice = choices[0]
-                stop_reason = first_choice.get("finish_reason")
-                if stop_reason == "stop":
-                    return deltas, True, "stop"
-                deltas += first_choice.get("text", "")
-            except json.JSONDecodeError:
-                pass
     # ollama examples:
     #  {"id":"cmpl-142","object":"text_completion","created":1747075759,"choices":[{"text":"```","index":0,"finish_reason":null}],"model":"qwen2.5-coder:1.5b","system_fingerprint":"fp_ollama"}
     #  {"id":"cmpl-142","object":"text_completion","created":1747075759,"choices":[{"text":"","index":0,"finish_reason":"stop"}],"model":"qwen2.5-coder:1.5b","system_fingerprint":"fp_ollama"}
@@ -48,7 +47,6 @@ def parse_deltas_from_chunk(chunk_of_events: str) -> tuple[str, bool, str|None]:
     #  {"id":"cmpl-fd048c7865e94616a2ed2b6564c1232b","object":"text_completion","created":1747078116,"model":"zed-industries/zeta","choices":[{"index":0,"text":"`\n","logprobs":null,"finish_reason":null,"stop_reason":null}],"usage":null}
     #  {"id":"cmpl-fd048c7865e94616a2ed2b6564c1232b","object":"text_completion","created":1747078116,"model":"zed-industries/zeta","choices":[{"index":0,"text":"","logprobs":null,"finish_reason":"stop","stop_reason":null}],"usage":null}
 
-    return deltas, False, None
 
 @app.post("/stream_edits")
 async def stream_edits(client_request: Request):
@@ -99,7 +97,7 @@ async def stream_edits(client_request: Request):
                     #     print("Client of /stream_edits Disconnected")
                     #     break
                 
-                    deltas, is_done, finish_reason = parse_deltas_from_chunk(chunk_of_events)
+                    deltas, is_done, finish_reason = parse_delta(chunk_of_events)
                     print(f"[blue]deltas: {deltas}")
                     
                     if is_done:
