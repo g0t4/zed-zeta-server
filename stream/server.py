@@ -25,7 +25,6 @@ def parse_delta(line: str) -> tuple[str, bool, str|None]:
     if not line or not line.startswith("data: "):
         return "", False, None
 
-    # print("[green]line",line)
     event_data = line[6:]
     try:
         event_data = event_data.strip()
@@ -58,14 +57,16 @@ class StreamRequestModel(BaseModel):
 @app.post("/stream_edits")
 async def stream_edits(model: StreamRequestModel): # client_request: Request
     
-    print("\n\n[bold red]## Zed request body:")
-    print(model)
+    if verbose_logging:
+        print("\n\n[bold red]## Zed request body:")
+        print(model)
 
     prompt_template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
     prompt = prompt_template.format(model.input_events, model.input_excerpt)
 
-    print("\n\n[bold red]## Prompt:")
-    print(prompt)
+    if verbose_logging:
+        print("\n\n[bold red]## Prompt:")
+        print(prompt)
 
     async def request_vllm_completion_streaming():
         timeout_seconds = 30
@@ -85,10 +86,12 @@ async def stream_edits(model: StreamRequestModel): # client_request: Request
 
                 "stream": True,
             }
-            print("\n\n[bold red]## request body => zeta /v1/completions:")
-            print_json(data=request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
+            if verbose_logging:
+                print("\n\n[bold red]## request body => zeta /v1/completions:")
+                print_json(data=request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
 
-            print("\n\n[bold red]## response zeta => deltas:") 
+                print("\n\n[bold red]## response zeta => deltas:") 
+
             async with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as vllm_response:
                 # FYI for completions:
                 #   aiter_lines() => SSEs split into data: line and empty line (separate chunks)
@@ -114,13 +117,12 @@ async def stream_edits(model: StreamRequestModel): # client_request: Request
                     if is_done:
                         if model.include_finish_reason:
                             yield json.dumps({"finish_reason": finish_reason })
-                        print(f"done: {finish_reason}")
+                        if verbose_logging:
+                            print(f"done: {finish_reason}")
                         break
 
         if verbose_logging:
             print("\n\n[bold green]## All deltas:")
             print("".join(all_deltas))
-
-            # TODO print final, full response for debugging?
 
     return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
