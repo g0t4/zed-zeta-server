@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 import httpx
 import json
 from rich import print as rich_print, print_json
@@ -49,18 +50,19 @@ def parse_delta(line: str) -> tuple[str, bool, str|None]:
     #  {"id":"cmpl-fd048c7865e94616a2ed2b6564c1232b","object":"text_completion","created":1747078116,"model":"zed-industries/zeta","choices":[{"index":0,"text":"`\n","logprobs":null,"finish_reason":null,"stop_reason":null}],"usage":null}
     #  {"id":"cmpl-fd048c7865e94616a2ed2b6564c1232b","object":"text_completion","created":1747078116,"model":"zed-industries/zeta","choices":[{"index":0,"text":"","logprobs":null,"finish_reason":"stop","stop_reason":null}],"usage":null}
 
+class StreamRequestModel(BaseModel):
+    input_events: str|None
+    input_excerpt: str|None
+    include_finish_reason: bool = False 
 
 @app.post("/stream_edits")
-async def stream_edits(client_request: Request, include_finish_reason = False):
+async def stream_edits(client_request: Request, model: StreamRequestModel):
     
-    zed_request = await client_request.json()
     print("\n\n[bold red]## Zed request body:")
-    print_json(data=zed_request)
-    input_events = zed_request.get('input_events', '')
-    input_excerpt = zed_request.get('input_excerpt', '')
+    # print_json(data=model)
 
     prompt_template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
-    prompt = prompt_template.format(input_events, input_excerpt)
+    prompt = prompt_template.format(model.input_events, model.input_excerpt)
 
     print("\n\n[bold red]## Prompt:")
     print(prompt)
@@ -109,7 +111,7 @@ async def stream_edits(client_request: Request, include_finish_reason = False):
                         all_deltas.append(delta)
 
                     if is_done:
-                        if include_finish_reason:
+                        if model.include_finish_reason:
                             yield json.dumps({"finish_reason": finish_reason })
                         print(f"done: {finish_reason}")
                         break
