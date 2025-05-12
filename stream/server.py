@@ -46,9 +46,13 @@ async def stream_edits(request: Request, response: Response):
             print("\n\n[bold red]## request body => zeta /v1/completions:")
             print_json(data=request_body)  # FYI print_json doesn't hard wrap lines, uses " instead of ', obvi compat w/ jq
             async with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as response:
+                # FYI for completions:
+                #   aiter_lines() => SSEs split into data: line and empty line (separate chunks)
+                #   aiter_text() => SSEs are entire chunk including 2 newlines:  with data: {}\n\n
                 # async for chunk in response.aiter_lines():
                 async for chunk in response.aiter_text():
-                    print("[yellow]chunk", chunk)
+                    print("[yellow][bold]chunk", chunk)
+
 
 
             # # response = await client.post(OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body)
