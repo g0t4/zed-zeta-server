@@ -3,7 +3,9 @@ rich
 ipykernel # for ipython3 command
 fastapi[standard]
 uvicorn[standard]
-vllm # for /consolidated_edits
+
+# # manual build of vllm for now:
+# vllm # for /consolidated_edits
 
 yapf # my formatter
 
