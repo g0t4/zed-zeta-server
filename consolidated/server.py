@@ -56,7 +56,7 @@ async def request_and_print():
         # FYI compute delta b/c each iteration returns the entire response "thus far"
         text_delta = choice_thus_far.text.removeprefix(text_thus_far)
         text_thus_far = choice_thus_far.text
-        print(text_delta)
+        print(text_delta, end="")
 
         if choice_thus_far.finish_reason:
             if verbose_logging:
