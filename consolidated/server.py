@@ -133,3 +133,9 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
             print(text_thus_far)
 
     return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
+
+#%% 
+
+# run web server in repl (iron.nvim) via uvicorn:
+import uvicorn
+uvicorn.run(app, host="0.0.0.0", port=7200, reload=False)
