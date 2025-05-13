@@ -1,3 +1,4 @@
+import uuid
 import asyncio
 from vllm import AsyncLLMEngine, SamplingParams, AsyncEngineArgs
 from fastapi import FastAPI
@@ -45,7 +46,8 @@ async def request_and_print():
     text_thus_far = None
 
     sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
-    generator = engine.generate(prediction_request.build_prompt(), sampling_params, request_id="unique_id")
+    request_id = str(uuid.uuid4())
+    generator = engine.generate(prediction_request.build_prompt(), sampling_params, request_id=request_id)
     async for output in generator:
         print("[bold][white]output", output)
         choice_thus_far = output.outputs[0]
@@ -85,7 +87,9 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest):  # c
         # TODO timeout?
         # TODO verify if client disconnects that vllm terminates generation (USE client_request: Request above)
         sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
-        async for choice in engine.generate(prompt, sampling_params, request_id="unique_id"):
+        request_id = str(uuid.uuid4())
+        generator = engine.generate(prompt, sampling_params, request_id=request_id)
+        async for choice in generator:
             choice = choice.outputs[0]
             delta = choice.text
             yield delta
