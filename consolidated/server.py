@@ -108,6 +108,7 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
         #       TODO verify this is from engine.abort()?
         output: RequestOutput
         async for output in generator:
+            # print("[bold][white]output", output)
             choice_thus_far = output.outputs[0]
             # FYI compute delta b/c each iteration returns the entire response "thus far"
             text_delta = choice_thus_far.text.removeprefix(text_thus_far)
