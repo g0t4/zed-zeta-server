@@ -144,8 +144,8 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
     #     https://github.com/encode/starlette/blob/4acf1d1/starlette/responses.py#L259-L278
     #     and here are the docs for events in ASGI spec:
     #       https://asgi.readthedocs.io/en/latest/specs/main.html#events
+    #         https://asgi.readthedocs.io/en/latest/specs/www.html#disconnected-client-send-exception
     #   "task" is cancelable
-
 #%% 
 
 if IRON_NVIM_MARKER:
