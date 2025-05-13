@@ -69,6 +69,7 @@ async def request_and_print():
 
 # FYI IGNORE pyright complaining about no top level await, ipython supports top level awaits (in cells)
 #   FYI re-runnable in ipython repl, i.e. with iron.nvim! super useful to not reload model on every change that I wanna test!
+#   DO NOT use asyncio.run()... cannot run a second time (not easily anyways) w/ ipython repl
 await request_and_print()   # type: ignore
 
 #%%
