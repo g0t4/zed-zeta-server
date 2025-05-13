@@ -23,6 +23,8 @@ class StreamingPredictionRequest(BaseModel):
 hf_model = "zed-industries/zeta"
 engine = AsyncLLMEngine.from_engine_args(AsyncEngineArgs(model=hf_model))
 
+#%% 
+
 @app.post("/consolidated_edits")
 async def consolidated_edits(prediction_request: StreamingPredictionRequest):  # client_request: Request
 
