@@ -8,6 +8,12 @@ from pydantic import BaseModel
 import json
 from rich import print as rich_print
 
+# TLDR => literally marking iron.nvim ONLY code sections
+# so they don't run unless I explicitly select and send them to the REPL (ipython)
+# or if I toggle this True (but that is not my intent)
+# primary intent is I want uvicorn/fastapi-dev to not run this code, w/o needing to comment it out
+IRON_NVIM_MARKER = False
+
 print = rich_print
 
 app = FastAPI()
@@ -33,6 +39,7 @@ hf_model = "zed-industries/zeta"
 engine = AsyncLLMEngine.from_engine_args(AsyncEngineArgs(model=hf_model))
 
 #%%
+
 verbose_logging = True 
 
 fake_request = {
@@ -136,6 +143,7 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
 
 #%% 
 
-# run web server in repl (iron.nvim) via uvicorn:
-import uvicorn
-uvicorn.run(app, host="0.0.0.0", port=7200, reload=False)
+if IRON_NVIM_MARKER:
+    # run web server in repl (iron.nvim) via uvicorn:
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7200, reload=False)
