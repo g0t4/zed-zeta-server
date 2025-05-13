@@ -40,44 +40,45 @@ engine = AsyncLLMEngine.from_engine_args(AsyncEngineArgs(model=hf_model))
 
 #%%
 
-verbose_logging = True 
+if IRON_NVIM_MARKER:
+    verbose_logging = True
 
-fake_request = {
-    "input_events": "User edited \"lua/ask-openai/prediction/tests/calc/calc.lua\":\n```diff\n@@ -7,4 +7,5 @@\n \n \n \n+\n return M\n\n```\n\nUser edited \"lua/ask-openai/prediction/tests/calc/calc.lua\":\n```diff\n@@ -8,4 +8,5 @@\n \n \n \n+\n return M\n\n```",
-    "input_excerpt": "```ask-openai.nvim/lua/ask-openai/prediction/tests/calc/calc.lua\n<|start_of_file|>\n<|editable_region_start|>\nlocal M = {}\n\nfunction M.add(a, b)\n    return a + b\nend\n<|user_cursor_is_here|>\n\n\n\n\n\nreturn M\n\n<|editable_region_end|>\n```",
-    "include_finish_reason": True
-}
-prediction_request = ConsolidatedEditsRequest.model_validate(fake_request)
+    fake_request = {
+        "input_events": "User edited \"lua/ask-openai/prediction/tests/calc/calc.lua\":\n```diff\n@@ -7,4 +7,5 @@\n \n \n \n+\n return M\n\n```\n\nUser edited \"lua/ask-openai/prediction/tests/calc/calc.lua\":\n```diff\n@@ -8,4 +8,5 @@\n \n \n \n+\n return M\n\n```",
+        "input_excerpt": "```ask-openai.nvim/lua/ask-openai/prediction/tests/calc/calc.lua\n<|start_of_file|>\n<|editable_region_start|>\nlocal M = {}\n\nfunction M.add(a, b)\n    return a + b\nend\n<|user_cursor_is_here|>\n\n\n\n\n\nreturn M\n\n<|editable_region_end|>\n```",
+        "include_finish_reason": True
+    }
+    prediction_request = ConsolidatedEditsRequest.model_validate(fake_request)
 
-# FYI this is working, but delta contains entire output and not just most recent token?
-async def request_and_print():
-    text_thus_far = ""
+    # FYI this is working, but delta contains entire output and not just most recent token?
+    async def request_and_print():
+        text_thus_far = ""
 
-    sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
-    request_id = str(uuid.uuid4())
-    generator = engine.generate(prediction_request.build_prompt(), sampling_params, request_id=request_id)
-    output: RequestOutput
-    async for output in generator:
-        # print("[bold][white]output", output)
-        choice_thus_far = output.outputs[0]
-        # FYI compute delta b/c each iteration returns the entire response "thus far"
-        text_delta = choice_thus_far.text.removeprefix(text_thus_far)
-        text_thus_far = choice_thus_far.text
-        print(text_delta, end="")
+        sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
+        request_id = str(uuid.uuid4())
+        generator = engine.generate(prediction_request.build_prompt(), sampling_params, request_id=request_id)
+        output: RequestOutput
+        async for output in generator:
+            # print("[bold][white]output", output)
+            choice_thus_far = output.outputs[0]
+            # FYI compute delta b/c each iteration returns the entire response "thus far"
+            text_delta = choice_thus_far.text.removeprefix(text_thus_far)
+            text_thus_far = choice_thus_far.text
+            print(text_delta, end="")
 
-        if choice_thus_far.finish_reason:
-            if verbose_logging:
-                print(f"done: {choice_thus_far.finish_reason}")
-            break
+            if choice_thus_far.finish_reason:
+                if verbose_logging:
+                    print(f"done: {choice_thus_far.finish_reason}")
+                break
 
-    if verbose_logging:
-        print("\n\n[bold green]## All deltas:")
-        print(text_thus_far)
+        if verbose_logging:
+            print("\n\n[bold green]## All deltas:")
+            print(text_thus_far)
 
-# FYI IGNORE pyright complaining about no top level await, ipython supports top level awaits (in cells)
-#   FYI re-runnable in ipython repl, i.e. with iron.nvim! super useful to not reload model on every change that I wanna test!
-#   DO NOT use asyncio.run()... cannot run a second time (not easily anyways) w/ ipython repl
-await request_and_print()   # type: ignore
+    # FYI IGNORE pyright complaining about no top level await, ipython supports top level awaits (in cells)
+    #   FYI re-runnable in ipython repl, i.e. with iron.nvim! super useful to not reload model on every change that I wanna test!
+    #   DO NOT use asyncio.run()... cannot run a second time (not easily anyways) w/ ipython repl
+    await request_and_print()   # type: ignore
 
 #%%
 
