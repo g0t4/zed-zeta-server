@@ -48,6 +48,8 @@ async def request_and_print():
     sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
     request_id = str(uuid.uuid4())
     generator = engine.generate(prediction_request.build_prompt(), sampling_params, request_id=request_id)
+    # docs: https://docs.vllm.ai/en/stable/api/engine/async_llm_engine.html#vllm.AsyncLLMEngine.generate
+    #   has good example of disconnect detection and aborting the request
     async for output in generator:
         print("[bold][white]output", output)
         choice_thus_far = output.outputs[0]
@@ -69,7 +71,7 @@ await request_and_print()   # type: ignore
 #%%
 
 @app.post("/consolidated_edits")
-async def consolidated_edits(prediction_request: ConsolidatedEditsRequest):  # client_request: Request
+async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, client_request: Request)
 
     if verbose_logging:
         print("\n\n[bold red]## Zed request body:")
@@ -85,7 +87,6 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest):  # c
         all_deltas = []
 
         # TODO timeout?
-        # TODO verify if client disconnects that vllm terminates generation (USE client_request: Request above)
         sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
         request_id = str(uuid.uuid4())
         generator = engine.generate(prompt, sampling_params, request_id=request_id)
@@ -93,11 +94,12 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest):  # c
             choice = choice.outputs[0]
             delta = choice.text
             yield delta
-            # TODO!? disconnect check?
-            # if await client_request.is_disconnected():
-            #     # add client_request: Request as paramter to stream_edits way above
-            #     print("Client of /stream_edits Disconnected")
-            #     break
+
+            # TODO! TEST DISCONNECT
+            if await client_request.is_disconnected():
+                print("Client of /stream_edits Disconnected")
+                await engine.abort(request_id)
+                break
 
             if verbose_logging:
                 all_deltas.append(delta)
