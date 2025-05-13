@@ -90,9 +90,9 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
         sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
         request_id = str(uuid.uuid4())
         generator = engine.generate(prompt, sampling_params, request_id=request_id)
-        async for choice in generator:
-            choice = choice.outputs[0]
-            delta = choice.text
+        async for output in generator:
+            choice_thus_far = output.outputs[0]
+            delta = choice_thus_far.text
             yield delta
 
             # TODO! TEST DISCONNECT
@@ -104,11 +104,11 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
             if verbose_logging:
                 all_deltas.append(delta)
 
-            if choice.finish_reason:
+            if choice_thus_far.finish_reason:
                 if prediction_request.include_finish_reason:
-                    yield json.dumps({"finish_reason": choice.finish_reason})
+                    yield json.dumps({"finish_reason": choice_thus_far.finish_reason})
                 if verbose_logging:
-                    print(f"done: {choice.finish_reason}")
+                    print(f"done: {choice_thus_far.finish_reason}")
                 break
 
         if verbose_logging:
