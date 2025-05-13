@@ -1,6 +1,7 @@
 import uuid
 import asyncio
 from vllm import AsyncLLMEngine, SamplingParams, AsyncEngineArgs
+from vllm.outputs import RequestOutput
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -48,8 +49,7 @@ async def request_and_print():
     sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
     request_id = str(uuid.uuid4())
     generator = engine.generate(prediction_request.build_prompt(), sampling_params, request_id=request_id)
-    # docs: https://docs.vllm.ai/en/stable/api/engine/async_llm_engine.html#vllm.AsyncLLMEngine.generate
-    #   has good example of disconnect detection and aborting the request
+    output: RequestOutput
     async for output in generator:
         # print("[bold][white]output", output)
         choice_thus_far = output.outputs[0]
@@ -94,6 +94,19 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
         sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
         request_id = str(uuid.uuid4())
         generator = engine.generate(prompt, sampling_params, request_id=request_id)
+
+        # docs: https://docs.vllm.ai/en/stable/api/engine/async_llm_engine.html#vllm.AsyncLLMEngine.generate
+        #   has good example of disconnect detection and aborting the request
+        #   great article explaining both sync and async: https://medium.com/@crclq2018/explaining-the-source-code-behind-the-vllm-fast-inference-engine-91429f54d1f7
+        #   btw, vllm uses FastAPI too, for /v1/completions: 
+        #     https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/api_server.py#L488-L506
+        #     calls => https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/serving_completion.py#L64
+        #     stream =>
+        #       https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/serving_completion.py#L190-L199
+        #       building response: https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/serving_completion.py#L247-L277
+        #     sync on cancel (IIUC abort) => https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/serving_completion.py#L228
+        #       TODO verify this is from engine.abort()?
+        output: RequestOutput
         async for output in generator:
             choice_thus_far = output.outputs[0]
             # FYI compute delta b/c each iteration returns the entire response "thus far"
