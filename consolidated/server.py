@@ -43,7 +43,7 @@ prediction_request = ConsolidatedEditsRequest.model_validate(fake_request)
 
 # FYI this is working, but delta contains entire output and not just most recent token?
 async def request_and_print():
-    text_thus_far = None
+    text_thus_far = ""
 
     sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
     request_id = str(uuid.uuid4())
@@ -51,10 +51,12 @@ async def request_and_print():
     # docs: https://docs.vllm.ai/en/stable/api/engine/async_llm_engine.html#vllm.AsyncLLMEngine.generate
     #   has good example of disconnect detection and aborting the request
     async for output in generator:
-        print("[bold][white]output", output)
+        # print("[bold][white]output", output)
         choice_thus_far = output.outputs[0]
+        # FYI compute delta b/c each iteration returns the entire response "thus far"
+        text_delta = choice_thus_far.text.removeprefix(text_thus_far)
         text_thus_far = choice_thus_far.text
-        # print(full_text)
+        print(text_delta)
 
         if choice_thus_far.finish_reason:
             if verbose_logging:
@@ -84,7 +86,7 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
         print(prompt)
 
     async def request_vllm_completion_streaming():
-        all_deltas = []
+        text_thus_far = ""
 
         # TODO timeout?
         sampling_params = SamplingParams(max_tokens=2048, temperature=0.0)
@@ -92,17 +94,16 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
         generator = engine.generate(prompt, sampling_params, request_id=request_id)
         async for output in generator:
             choice_thus_far = output.outputs[0]
-            delta = choice_thus_far.text
-            yield delta
+            # FYI compute delta b/c each iteration returns the entire response "thus far"
+            text_delta = choice_thus_far.text.removeprefix(text_thus_far)
+            text_thus_far = choice_thus_far.text
+            yield text_delta
 
             # TODO! TEST DISCONNECT
             if await client_request.is_disconnected():
                 print("Client of /stream_edits Disconnected")
                 await engine.abort(request_id)
                 break
-
-            if verbose_logging:
-                all_deltas.append(delta)
 
             if choice_thus_far.finish_reason:
                 if prediction_request.include_finish_reason:
@@ -113,6 +114,6 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
 
         if verbose_logging:
             print("\n\n[bold green]## All deltas:")
-            print("".join(all_deltas))
+            print(text_thus_far)
 
     return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
