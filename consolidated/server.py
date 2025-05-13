@@ -1,7 +1,7 @@
 import uuid
 import asyncio
 from vllm import AsyncLLMEngine, SamplingParams, AsyncEngineArgs
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import json
