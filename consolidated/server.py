@@ -75,7 +75,7 @@ await request_and_print()   # type: ignore
 #%%
 
 @app.post("/consolidated_edits")
-async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, client_request: Request)
+async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, client_request: Request):
 
     if verbose_logging:
         print("\n\n[bold red]## Zed request body:")
