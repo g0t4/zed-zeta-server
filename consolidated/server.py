@@ -68,6 +68,7 @@ async def request_and_print():
         print(text_thus_far)
 
 # FYI IGNORE pyright complaining about no top level await, ipython supports top level awaits (in cells)
+#   FYI re-runnable in ipython repl, i.e. with iron.nvim! super useful to not reload model on every change that I wanna test!
 await request_and_print()   # type: ignore
 
 #%%
