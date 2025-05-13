@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 import asyncio
 import httpx
 from timing import Timer
 from rich import print as rich_print, print_json
+from typing import List  #, Set, Dict, Tuple
+from pydantic import BaseModel
 
 print = rich_print
 
@@ -30,18 +32,21 @@ app = FastAPI()
 #  FYI this is mentioned in model card... IIAC this is how they're serving the actual zeta model (or at the time)
 #    https://huggingface.co/zed-industries/zeta
 #    do some speed tests w/ and w/o spec dec
-
+class PredictEditsRequest(BaseModel):
+    input_events: str | None
+    input_excerpt: str | None
+    # TODOs:
+    outline: str | None
+    speculated_output: str | None
+    can_collect_data: bool = False
+    diagnostic_groups: List[str] = []
 
 @app.post("/predict_edits")
-async def predict_edits(request: Request, response: Response):
-    
-    zed_request = await request.json()
+async def predict_edits(request: Request, predict_request: PredictEditsRequest):
+
     print("\n\n[bold red]## Zed request body:")
-    print_json(data=zed_request)
-    outline = zed_request.get('outline', '')
-    input_events = zed_request.get('input_events', '')
-    input_excerpt = zed_request.get('input_excerpt', '')
-    #
+    print(predict_request)
+
     # FYI other params passed by zed:
     #
     # speculated_output: Some(values.speculated_output), # IIAC not needed b/c:
@@ -51,22 +56,19 @@ async def predict_edits(request: Request, response: Response):
     # - BUT, AFAICT vllm builds ngrams on prompt (no parameter to use as basis instead)
     #   - https://docs.vllm.ai/en/latest/features/spec_decode.html#speculating-by-matching-n-grams-in-the-prompt
     # - FYI it is very much possible that they are NOT using vllm on the backend
-    #   - they show vllm on huggingface, so I assume they are... 
+    #   - they show vllm on huggingface, so I assume they are...
     #     - they even show how to use speculative decoding
-    #   - or they have a custom ngram implementation with vllm 
-    #
-    # diagnostic_groups # TODO capture example of this
-    #
-    # can_collect_data
-    #
-    # TODO is this the right outline prefix/header for prompt?
-    outline_prefix = f"### Outline for current file:\n{outline}\n" if outline else ""
-    if outline:
-        print("\n\n[yellow][WARN]: outline not yet supported")
+    #   - or they have a custom ngram implementation with vllm
+
+    # # TODO is this the right outline prefix/header for prompt?
+    # outline = predict_request.outline
+    # outline_prefix = f"### Outline for current file:\n{outline}\n" if outline else ""
+    # if outline:
+    #     print("\n\n[yellow][WARN]: outline not yet supported")
 
     # TODO is there a header before Instruction?
     prompt_template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
-    prompt = prompt_template.format(input_events, input_excerpt)
+    prompt = prompt_template.format(predict_request.input_events, predict_request.input_excerpt)
 
     print("\n\n[bold red]## Prompt:")
     print(prompt)
@@ -81,9 +83,8 @@ async def predict_edits(request: Request, response: Response):
             with Timer("inner"):
                 request_body = {
 
-                    # "model": "zeta", # LMStudio defaults to zeta 
+                    # "model": "zeta", # LMStudio defaults to zeta
                     # * for VLLM clear model or set matching value with `--served-model-name zeta`
-
                     "prompt": prompt,
                     "max_tokens": 2048,  # PR 23997 used 2048 # TODO what max? # can I get it to just stop on EOT?
                     # TODO should I set EOT to be the end of the template token(s)?
@@ -144,13 +145,8 @@ async def predict_edits(request: Request, response: Response):
     #     INFO 05-06 16:27:59 [async_llm.py:318] Request cmpl-f1c129d7868647b488c7ef3e5bb1b73b-0 aborted.
     # Or, better yet run this with neovim by using the predictions plugin
     #   hit i to go into insert mode
-    #   hit escape to bail 
+    #   hit escape to bail
     #   you will see aborted in vllm logs! (and in predict_edits logs)
-
-
-
-
-
 
 # I prefer fastapi dev ... but uvicorn can do hot reload too
 # if __name__ == "__main__":
