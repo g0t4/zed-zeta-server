@@ -115,8 +115,6 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
         #     stream =>
         #       https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/serving_completion.py#L190-L199
         #       building response: https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/serving_completion.py#L247-L277
-        #     sync on cancel (IIUC abort) => https://github.com/vllm-project/vllm/blob/04a58c099/vllm/entrypoints/openai/serving_completion.py#L228
-        #       TODO verify this is from engine.abort()?
         output: RequestOutput
         async for output in generator:
             # print("[bold][white]output", output)
@@ -125,12 +123,6 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
             text_delta = choice_thus_far.text.removeprefix(text_thus_far)
             text_thus_far = choice_thus_far.text
             yield text_delta
-
-            # TODO! TEST DISCONNECT
-            if await client_request.is_disconnected():
-                print("Client of /stream_edits Disconnected")
-                await engine.abort(request_id)
-                break
 
             if choice_thus_far.finish_reason:
                 if prediction_request.include_finish_reason:
@@ -143,7 +135,16 @@ async def consolidated_edits(prediction_request: ConsolidatedEditsRequest, clien
             print("\n\n[bold green]## All deltas:")
             print(text_thus_far)
 
-    return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
+    task = request_vllm_completion_streaming()
+    return StreamingResponse(task, media_type="text/event-stream")
+    # FYI StreamingResponse is from  https://github.com/encode/starlette/blob/4acf1d1/starlette/responses.py#L219
+    #   encode/starlette repo
+    #   and it handles terminating on client disconnect
+    #   YUP here is the logic that listens for disconnect from ASGI server:
+    #     https://github.com/encode/starlette/blob/4acf1d1/starlette/responses.py#L259-L278
+    #     and here are the docs for events in ASGI spec:
+    #       https://asgi.readthedocs.io/en/latest/specs/main.html#events
+    #   "task" is cancelable
 
 #%% 
 
