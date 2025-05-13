@@ -19,3 +19,8 @@ uv pip install -r requirements.txt
 
 # * this was in notes for vllm itself, its build.. not sure I need this here?
 # uv pip install transformers # no direct torch deps
+
+
+# FYI! validated all of this works! one caveat (can load in ipython ok...)
+#   but, there is a pathing issue if try to run `python consolidate/server.py` on vllm module not found...
+#   but it loads fine in ipython repl (w/ and w/o iron.nvim)
