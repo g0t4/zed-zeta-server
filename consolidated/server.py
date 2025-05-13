@@ -11,7 +11,7 @@ app = FastAPI()
 
 verbose_logging = False
 
-class StreamingPredictionRequest(BaseModel):
+class ConsolidatedEditsRequest(BaseModel):
     input_events: str | None
     input_excerpt: str | None
     include_finish_reason: bool = False
@@ -26,7 +26,7 @@ engine = AsyncLLMEngine.from_engine_args(AsyncEngineArgs(model=hf_model))
 #%% 
 
 @app.post("/consolidated_edits")
-async def consolidated_edits(prediction_request: StreamingPredictionRequest):  # client_request: Request
+async def consolidated_edits(prediction_request: ConsolidatedEditsRequest):  # client_request: Request
 
     if verbose_logging:
         print("\n\n[bold red]## Zed request body:")
