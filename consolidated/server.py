@@ -1,5 +1,6 @@
 import uuid
 import asyncio
+# TODO why are these vllm modules not recognized by nvim pyright LSP? and also when using python3/ipython3 consolidated/server.py directly?
 from vllm import AsyncLLMEngine, SamplingParams, AsyncEngineArgs
 from vllm.outputs import RequestOutput
 from fastapi import FastAPI, Request
@@ -32,7 +33,9 @@ class ConsolidatedEditsRequest(BaseModel):
         return prompt
 
 # FYI! why have consolidated_edits:
-# TODO! does it matter?
+# TODO! does it matter:
+#  overall duration won't change much b/c token latency typical dominates
+#  but, processing overhead drops substantially both server and client side
 
 # hf_model = "meta-llama/Llama-3.2-1B-Instruct"  # a bit faster for testing
 hf_model = "zed-industries/zeta"
