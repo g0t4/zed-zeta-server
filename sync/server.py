@@ -8,8 +8,9 @@ from pydantic import BaseModel
 
 print = rich_print
 
-OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"
+# OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"
 # OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://localhost:1234/v1/completions"
+OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:11434/v1/completions"
 app = FastAPI()
 
 # based on:
@@ -83,6 +84,8 @@ async def predict_edits(request: Request, predict_request: PredictEditsRequest):
             with Timer("inner"):
                 request_body = {
 
+                    "model": "huggingface.co/lmstudio-community/zeta-GGUF:zeta-Q8_0.gguf",
+  
                     # "model": "zeta", # LMStudio defaults to zeta
                     # * for VLLM clear model or set matching value with `--served-model-name zeta`
                     "prompt": prompt,
