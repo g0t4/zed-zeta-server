@@ -37,8 +37,8 @@ class PredictEditsRequest(BaseModel):
     input_events: str | None
     input_excerpt: str | None
     # TODOs:
-    outline: str | None
-    speculated_output: str | None
+    outline: str | None = None
+    speculated_output: str | None = None
     can_collect_data: bool = False
     diagnostic_groups: List[str] = []
 
