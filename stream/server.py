@@ -85,6 +85,8 @@ async def stream_edits(prediction_request: StreamEditsRequest): # client_request
                 # TODO later swap back into vllm backend for real deal
                 #  ollama server
                 # "model": "qwen2.5-coder:1.5b",
+                # ollama pull https://huggingface.co/lmstudio-community/zeta-GGUF:zeta-Q8_0.gguf
+                #   quantized zeta models! and in ollama!
 
                 "prompt": prompt,
                 "max_tokens": 2048,
