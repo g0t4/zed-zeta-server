@@ -45,7 +45,7 @@ async def stream_edits(prediction_request: StreamEditsRequest, client_request: R
     prompt_template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
     prompt = prompt_template.format(prediction_request.input_events, prediction_request.input_excerpt)
 
-    def request_vllm_completion_streaming():
+    async def request_vllm_completion_streaming():
         # TODO! setup sync client to compare
         with httpx.Client(timeout=30) as client:
             request_body = {
@@ -58,10 +58,10 @@ async def stream_edits(prediction_request: StreamEditsRequest, client_request: R
             with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as vllm_response:
                 for chunk_of_events in vllm_response.iter_lines():
 
-                    # # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
-                    # if await client_request.is_disconnected():
-                    #     print("[red]Client of /stream_edits Disconnected")
-                    #     break
+                    # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
+                    if await client_request.is_disconnected():
+                        print("[red]Client of /stream_edits Disconnected")
+                        break
 
                     delta, is_done, finish_reason = parse_delta(chunk_of_events)
                     if delta != "":
