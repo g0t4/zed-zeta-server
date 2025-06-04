@@ -7,4 +7,4 @@ if [ -z "$VIRTUAL_ENV" ]; then
     exit 1
 fi
 
-uvicorn --reload --port 7100 stream.server:app
+uvicorn --reload --port 7100 stream.block:app
