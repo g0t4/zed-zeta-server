@@ -13,17 +13,13 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"  # vllm
 
 app = FastAPI()
 
-
-
-
-
 class StreamEditsRequest(BaseModel):
     input_events: str | None
     input_excerpt: str | None
     include_finish_reason: bool = False
 
 @app.post("/stream_edits")
-async def stream_edits(prediction_request: StreamEditsRequest, client_request: Request):
+async def stream_edits(client_request: Request, prediction_request: StreamEditsRequest):
 
     prompt_template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
     prompt = prompt_template.format(prediction_request.input_events, prediction_request.input_excerpt)
