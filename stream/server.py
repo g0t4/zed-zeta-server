@@ -25,7 +25,7 @@ async def stream_edits(client_request: Request, prediction_request: StreamEditsR
     prompt = prompt_template.format(prediction_request.input_events, prediction_request.input_excerpt)
 
     async def request_vllm_completion_streaming():
-        # TODO! setup sync client to compare
+
         async with httpx.AsyncClient(timeout=30) as client:
             request_body = {
                 "prompt": prompt,
