@@ -15,10 +15,10 @@ def parse_delta(line: str) -> tuple[str, bool, str | None]:
     if not line or not line.startswith("data: "):
         return "", False, None
 
-    event_data = line[6:]
+    event_json = line[6:]
     try:
-        event_data = event_data.strip()
-        event = json.loads(event_data)
+        event_json = event_json.strip()
+        event = json.loads(event_json)
         choices = event.get("choices", [])
         first_choice = choices[0]
         stop_reason = first_choice.get("finish_reason")
@@ -27,7 +27,7 @@ def parse_delta(line: str) -> tuple[str, bool, str | None]:
             return delta, True, "stop"
         return delta, False, None
     except json.JSONDecodeError:
-        print("[red][bold]FAILURE parsing event_data: ", event_data)
+        print("[red][bold]FAILURE parsing event_data: ", event_json)
         return "", False, None
 
     # vllm examples:
@@ -56,14 +56,14 @@ async def stream_edits(prediction_request: StreamEditsRequest, client_request: R
             }
 
             with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as vllm_response:
-                for chunk_of_events in vllm_response.iter_lines():
+                for line in vllm_response.iter_lines():
 
                     # FYI vllm is showing Aborted request w/o needing to check myself for request.is_disconnected()
                     if await client_request.is_disconnected():
                         print("[red]Client of /stream_edits Disconnected")
                         break
 
-                    delta, is_done, finish_reason = parse_delta(chunk_of_events)
+                    delta, is_done, finish_reason = parse_delta(line)
                     if delta != "":
                         print(f"[blue]delta: {delta}")
 
