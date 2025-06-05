@@ -31,7 +31,7 @@ class EditPrediction(BaseModel):
 @app.post("/stream_edits")
 async def stream_edits(ide_request: Request, prediction: EditPrediction):
 
-    def get_vllm_completion_streaming():
+    def stream_vllm_completion():
 
         with httpx.Client(timeout=30) as client:
             request_body = prediction.request_body()
@@ -53,4 +53,4 @@ async def stream_edits(ide_request: Request, prediction: EditPrediction):
                         print(f"done: {finish_reason}")
                         break
 
-    return StreamingResponse(get_vllm_completion_streaming(), media_type="text/event-stream")
+    return StreamingResponse(stream_vllm_completion(), media_type="text/event-stream")
