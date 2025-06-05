@@ -13,9 +13,9 @@ OPENAI_COMPAT_V1_COMPLETIONS_URL = "http://ollama:8000/v1/completions"  # vllm
 
 app = FastAPI()
 
-class StreamEditsRequest(BaseModel):
+class EditPrediction(BaseModel):
+    input_excerpt: str
     input_events: str | None
-    input_excerpt: str | None
     include_finish_reason: bool = False
 
     def prompt(self):
@@ -23,7 +23,7 @@ class StreamEditsRequest(BaseModel):
         return template.format(self.input_events, self.input_excerpt)
 
 @app.post("/stream_edits")
-async def stream_edits(ide_request: Request, prediction: StreamEditsRequest):
+async def stream_edits(ide_request: Request, prediction: EditPrediction):
 
     async def request_vllm_completion_streaming():
 
