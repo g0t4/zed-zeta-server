@@ -31,7 +31,7 @@ class EditPrediction(BaseModel):
 @app.post("/stream_edits")
 async def stream_edits(ide_request: Request, prediction: EditPrediction):
 
-    async def stream_vllm_completion():
+    def stream_vllm_completion():
 
         with httpx.Client(timeout=30) as client:
             request_body = prediction.request_body()
@@ -39,9 +39,9 @@ async def stream_edits(ide_request: Request, prediction: EditPrediction):
             with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as vllm_response:
                 for line in vllm_response.iter_lines():
 
-                    if await ide_request.is_disconnected():
-                        print("[red]Client of /stream_edits Disconnected")
-                        break
+                    # if await ide_request.is_disconnected():
+                    #     print("[red]Client of /stream_edits Disconnected")
+                    #     break
 
                     delta, is_done, finish_reason = parse_delta(line)
                     if delta:
