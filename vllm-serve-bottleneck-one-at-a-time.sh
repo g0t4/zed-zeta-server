@@ -1,0 +1,1 @@
+vllm serve zed-industries/zeta --max-num-seqs 1
