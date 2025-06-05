@@ -42,8 +42,7 @@ async def stream_edits(ide_request: Request, prediction: EditPrediction):
                     delta, is_done, finish_reason = parse_delta(line)
                     if delta:
                         print(f"[blue]delta: {delta}")
-
-                    yield delta
+                        yield delta
 
                     if is_done:
                         print(f"done: {finish_reason}")
