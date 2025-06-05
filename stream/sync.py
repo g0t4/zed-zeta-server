@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import httpx
-import json
 from rich import print as rich_print
 
 from stream.common import parse_delta
@@ -15,25 +14,27 @@ app = FastAPI()
 
 class EditPrediction(BaseModel):
     input_excerpt: str
-    input_events: str | None
-    include_finish_reason: bool = False
+    input_events: str = ""
 
     def prompt(self):
         template = """### Instruction:\nYou are a code completion assistant and your task is to analyze user edits and then rewrite an excerpt that the user provides, suggesting the appropriate edits within the excerpt, taking into account the cursor location.\n\n### User Edits:\n\n{}\n\n### User Excerpt:\n\n{}\n\n### Response:\n"""
         return template.format(self.input_events, self.input_excerpt)
 
+    def request_body(self):
+        return {
+            "prompt": self.prompt(),
+            "max_tokens": 2048,
+            "temperature": 0.0,
+            "stream": True,
+        }
+
 @app.post("/stream_edits")
 async def stream_edits(ide_request: Request, prediction: EditPrediction):
 
-    async def request_vllm_completion_streaming():
+    async def get_vllm_completion_streaming():
 
         with httpx.Client(timeout=30) as client:
-            request_body = {
-                "prompt": prediction.prompt(),
-                "max_tokens": 2048,
-                "temperature": 0.0,
-                "stream": True,
-            }
+            request_body = prediction.request_body()
 
             with client.stream(method="POST", url=OPENAI_COMPAT_V1_COMPLETIONS_URL, json=request_body) as vllm_response:
                 for line in vllm_response.iter_lines():
@@ -44,15 +45,13 @@ async def stream_edits(ide_request: Request, prediction: EditPrediction):
                         break
 
                     delta, is_done, finish_reason = parse_delta(line)
-                    if delta != "":
+                    if delta:
                         print(f"[blue]delta: {delta}")
 
                     yield delta
 
                     if is_done:
-                        if prediction.include_finish_reason:
-                            yield json.dumps({"finish_reason": finish_reason})
                         print(f"done: {finish_reason}")
                         break
 
-    return StreamingResponse(request_vllm_completion_streaming(), media_type="text/event-stream")
+    return StreamingResponse(get_vllm_completion_streaming(), media_type="text/event-stream")
