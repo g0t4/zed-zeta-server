@@ -4,7 +4,7 @@ import asyncio
 import httpx
 from timing import Timer
 from rich import print as rich_print, print_json
-from typing import List  #, Set, Dict, Tuple
+from typing import Any, List  #, Set, Dict, Tuple
 from pydantic import BaseModel
 
 print = rich_print
@@ -41,7 +41,7 @@ class PredictEditsRequest(BaseModel):
     outline: str | None = None
     speculated_output: str | None = None
     can_collect_data: bool = False
-    diagnostic_groups: List[str] = []
+    diagnostic_groups: list[Any] = []
 
 @app.post("/predict_edits")
 async def predict_edits(request: Request, predict_request: PredictEditsRequest):
