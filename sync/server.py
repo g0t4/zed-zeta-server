@@ -1,3 +1,4 @@
+import uuid
 from fastapi import FastAPI, Request
 import asyncio
 import httpx
@@ -107,7 +108,7 @@ async def predict_edits(request: Request, predict_request: PredictEditsRequest):
                 print_json(data=response_body)
                 response.raise_for_status()
                 choice_text = response_body.get("choices", [{}])[0].get("text", "")
-                response_id = response_body["id"].replace("cmpl-", "")  # drop cmpl- prefix, must be valid UUID for zed to parse (not sure what it needs it for, maybe logging?)
+                response_id = str(uuid.uuid4()).replace("-", "") # zed requires this
 
                 return {
                     "output_excerpt": choice_text,
